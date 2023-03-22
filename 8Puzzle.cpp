@@ -136,7 +136,42 @@ void embaralhar(char novo[20]){
 // === A* Sort === //
 
 
+// === Busca Cega === //
+ int acharZero(char atual[10])
+{
+       
+        int tam = strlen(atual);
+        int pos;
+        for (int i = 0; i < tam; i++)
+        {
+            if (atual[i] == 48){
+            	 return i;
+			}
+               
+        }
 
+        return -1;
+}
+
+char* possiveisMov(int pos)
+{
+	char p[2]="";
+	switch(pos)
+	{
+		case 3 : strcpy(p,strcat(p,"046"));
+		//falta os outros cases
+	}
+
+}
+void criarNo(char atual[10])
+{
+	char aux[10];
+	int pos =acharZero(atual);
+	char movs[4];
+	strcpy(movs,possiveisMov(pos));
+	printf("%s\n",movs);
+
+}
 
 // === MAIN === //
 int main(){
@@ -155,7 +190,7 @@ int main(){
 	}while(verificar(estado_final));
 	gotoxy(10,10);
 	printf("Embaralhar (Enter)");
-	strcpy(novo, estado_final);
+	strcpy(novo, "123046578");
 	embaralhar(novo);
 	textcolor(15);
 	textbackground(0);
