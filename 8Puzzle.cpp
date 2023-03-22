@@ -120,8 +120,8 @@ int get_index(char* string, char c) {
 void embaralhar(char novo[20]){
 	int i, j, aux;
 	char letra;
+	srand ( time(NULL) );
 	for(i = 0 ; i < 100 ; i++){
-		srand ( time(NULL) );
 		aux = rand() % 10;
 		if(aux < 9)
 			for(j = aux; j < 9; j++){
@@ -134,6 +134,75 @@ void embaralhar(char novo[20]){
 
 
 // === A* Sort === //
+void AEstrela(char novo[10],char final[10]){
+	No* no = (No*)malloc(sizeof(No));
+	Fila* fila = (Fila*)malloc(sizeof(Fila));
+	strcpy(no.matriz, novo);
+	fila.enqueue(no.matriz);
+	int i, qtd_no_total = 1, aux_heuristico = -1, qtd_filho, pos_heuristico;
+	while(strcmp(no.matriz, final) != 0)
+		qtd_filho = gerarFilhos(&no);
+		for(i = 0 ; i< ; i++){
+			qtd_no_total++;
+			if(aux_heuristico == -1 || aux_heuristico > no->filhos[i].fscore - no->filhos[i].hscore){
+				aux_heuristico = no->filhos[i].fscore - no->filhos[i].hscore;
+				pos_heuristico = i;
+			}
+			
+		}
+		no = no->filhos[pos_heuristico];
+		fila.enqueue(no.matriz);
+}
+
+int gerarFilhos(No *no){
+	int posZero = get_index(no.matriz, 48);
+	
+	switch(posZero)
+	{
+		case 0: 
+			//2 casos --> 1°: 1->0 || 2°: 3->0
+			
+			break;
+		case 1: 
+			//3 casos --> 1°: 0->1 || 2°: 2->1 || 3°: 4->1
+			
+			break;
+		case 2: 
+			//2 casos --> 1°: 1->2 || 2°: 5->2
+			
+			break;
+		case 3: 
+			//3 casos --> 1°: 1->3 || 2°: 4->3 || 3°: 6->3
+			
+			break;
+		case 4: 
+			//4 casos --> 1°: 2->4 || 2°: 3->4 || 3°: 5->4 || 4°: 7->4
+			
+			break;
+		case 5: 
+			//3 casos --> 1°: 2->5 || 2°: 4->5 || 3°: 8->5
+			
+			break;
+		case 6: 
+			//2 casos --> 1°: 3->6 || 2°: 7->6
+			
+			break;
+		case 7: 
+		
+			//3 casos --> 1°: 4->7 || 2°: 6->7 || 3°: 8->7
+			
+			break;
+		case 8: 
+		
+			//2 casos --> 1°: 7->8 || 2°: 5->8
+			
+			break;
+	}
+	
+}
+
+
+
 
 
 // === Busca Cega === //
