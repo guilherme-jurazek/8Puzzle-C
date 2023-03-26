@@ -14,11 +14,77 @@ struct No
 {
 	int fscore, gscore, hscore;
 	char matriz[10];
-	struct No *filhos[4];
+	struct No* filhos[4];
 };
 typedef struct No No;
 
 
+
+	
+
+// === FILA === //
+
+
+struct Fila
+{
+	struct NoFila *cabeca;
+};
+typedef struct Fila Fila;
+
+
+struct NoFila
+{
+	char matriz[10];
+	struct NoFila *prox;
+};
+typedef struct NoFila NoFila;
+
+void enqueue(Fila* fila, char matriz[10]){
+	NoFila* nofila = (NoFila*)malloc(sizeof(NoFila));	
+	nofila -> prox = NULL;
+	strcpy(nofila->matriz, matriz);
+	
+	if(fila->cabeca == NULL){
+		fila->cabeca = nofila;
+	}
+	else{
+		NoFila* noAux = fila -> cabeca;
+		while(noAux -> prox != NULL){
+			noAux = noAux ->prox;
+		}	
+		noAux -> prox = nofila;
+	}
+}
+
+bool isempty(Fila* fila){
+	return fila->cabeca == NULL;
+}
+
+char* dequeue(Fila* fila){
+	NoFila* noAux = fila->cabeca;
+	NoFila* noAnterior;
+	if(noAux != NULL){
+		if(noAux->prox!=NULL)
+			fila->cabeca = noAux -> prox;
+		else fila->cabeca = NULL;
+		return noAux->matriz;
+	}
+	return NULL;
+}
+
+
+bool possui(Fila* fila, char matriz[10]){
+	NoFila* noAux = fila->cabeca;
+	while(noAux -> prox != NULL)
+		if(strcmp(matriz, noAux->matriz) == 0)
+			return 1;
+		else
+			noAux = noAux ->prox;
+	if(strcmp(matriz, noAux->matriz) == 0)
+			return 1;
+		else
+			return 0;
+}
 
 // === FUNЧеES === //
 void Quadro(int CI, int LI, int CF, int LF, int CorT, int CorF);
@@ -27,7 +93,7 @@ int qtd_errado(char novo[10], char final[10]);
 void printBoard(char matriz[20], int x, int y);
 void embaralhar(char novo[20]);
 int get_index(char* string, char c);
-
+int gerarFilhos(No* no);
 
 
 
@@ -77,8 +143,8 @@ bool verificar(char estado_final[20]){
 // === FUNЧеES AUXILIARES === //
 int qtd_errado(char novo[10], char final[10]){
 	int i, qtd_errado = 0;
-	for(i = 0; i<9; i++){
-		if(novo[i] != final[i])
+	for(i = 0; i<10; i++){
+		if(novo[i] != final[i] && novo[i] != 48)
 			qtd_errado++;
 	}
 	return qtd_errado;
@@ -115,6 +181,32 @@ int get_index(char* string, char c) {
 }
 
 
+char* trocarPos(char matriz[10], int a, int b){
+	char aux, aux_matriz[10];	
+	//printf("%s\n", matriz);
+	strcpy(aux_matriz, matriz);
+	aux = aux_matriz[a];
+	aux_matriz[a] = aux_matriz[b];
+	aux_matriz[b] = aux;
+	return aux_matriz;
+}
+
+
+void mostrar_resultado(Fila* fila){
+	int i = 0, x = 10, y = 5;
+	char auxMatriz[10];
+	while(!isempty(fila)){
+		strcpy(auxMatriz, dequeue(fila));
+		printBoard(auxMatriz, x, y);
+		x += 20;
+		i ++;
+		if( i%3 ==0)
+		{
+			x = 10;
+			y += 10;
+		}
+	}
+}
 
 // === SHUFFLE SORT === //
 void embaralhar(char novo[20]){
@@ -130,78 +222,218 @@ void embaralhar(char novo[20]){
 				novo[aux] = j+48;
 			}
 	}
+	
+	strcpy(novo, "087462315");
 }
 
 
 // === A* Sort === //
 void AEstrela(char novo[10],char final[10]){
+	double time_spent = 0.0;
+    clock_t begin = clock();
 	No* no = (No*)malloc(sizeof(No));
+	No* noAnterior;
 	Fila* fila = (Fila*)malloc(sizeof(Fila));
-	strcpy(no.matriz, novo);
-	fila.enqueue(no.matriz);
-	int i, qtd_no_total = 1, aux_heuristico = -1, qtd_filho, pos_heuristico;
-	while(strcmp(no.matriz, final) != 0)
-		qtd_filho = gerarFilhos(&no);
-		for(i = 0 ; i< ; i++){
+	fila->cabeca = NULL;
+	Fila* filaTodosNos = (Fila*)malloc(sizeof(Fila));
+	filaTodosNos->cabeca = NULL;
+	strcpy(no->matriz, novo);
+	enqueue(fila, no->matriz);
+	enqueue(filaTodosNos, no->matriz);
+	int i, qtd_no_total = 1, aux_heuristico, qtd_filho, pos_heuristico, nivel = 0, passou;
+	while(strcmp(no->matriz, final) != 0){
+		aux_heuristico = -1;
+		qtd_filho = gerarFilhos(no);
+		nivel++;
+		passou = 0;
+		for(i = 0 ; i< qtd_filho; i++){
 			qtd_no_total++;
-			if(aux_heuristico == -1 || aux_heuristico > no->filhos[i].fscore - no->filhos[i].hscore){
-				aux_heuristico = no->filhos[i].fscore - no->filhos[i].hscore;
-				pos_heuristico = i;
+			printf("%s ",no->filhos[i]->matriz);
+			if(!possui(fila, no->filhos[i]->matriz)){
+				enqueue(filaTodosNos, no->filhos[i]->matriz);
+				no->filhos[i]->hscore = qtd_errado(no->filhos[i]->matriz, final);
+				no->filhos[i]->gscore = nivel;
+				no->filhos[i]->fscore = no->filhos[i]->hscore + no->filhos[i]->gscore;
+				printf("  %d   ", no->filhos[i]->hscore);
+				if(aux_heuristico == -1 || aux_heuristico >= no->filhos[i]->fscore){
+					aux_heuristico = no->filhos[i]->fscore;
+					pos_heuristico = i;
+				}
 			}
-			
 		}
+		printf("\n");
 		no = no->filhos[pos_heuristico];
-		fila.enqueue(no.matriz);
+		enqueue(fila, no->matriz);
+			
+	}
+
+	clock_t end = clock();
+    time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
+	system("cls");
+	printf("Tempo de execucao: %f segundos\n", time_spent);
+	printf("NOS visitados: %d\n", qtd_no_total);
+	printf("Passos para solucao: %d", nivel);
+	mostrar_resultado(fila);
+	getche();
 }
 
-int gerarFilhos(No *no){
-	int posZero = get_index(no.matriz, 48);
-	
+int gerarFilhos(No* no){
+	int posZero = get_index(no->matriz, 48), qtd_filhos;
+	char matrizAux[10]; 
 	switch(posZero)
 	{
-		case 0: 
+		case 0: {
 			//2 casos --> 1А: 1->0 || 2А: 3->0
+			strcpy(matrizAux,trocarPos(no->matriz, 0, 1));
+			No* no1 = (No*)malloc(sizeof(No));
+			strcpy(no1->matriz, matrizAux);  
+			no->filhos[0] = no1;
 			
-			break;
-		case 1: 
+			strcpy(matrizAux,trocarPos(no->matriz, 0, 3));
+			No* no2 = (No*)malloc(sizeof(No));
+			strcpy(no2->matriz, matrizAux);  
+			no->filhos[1] = no2;	
+			return 2;
+			}
+		case 1: {
 			//3 casos --> 1А: 0->1 || 2А: 2->1 || 3А: 4->1
+			strcpy(matrizAux,trocarPos(no->matriz, 0, 1));
+			No* no1 = (No*)malloc(sizeof(No));
+			strcpy(no1->matriz, matrizAux);  
+			no->filhos[0] = no1;
 			
-			break;
-		case 2: 
+			strcpy(matrizAux,trocarPos(no->matriz, 2, 1));
+			No* no2 = (No*)malloc(sizeof(No));
+			strcpy(no2->matriz, matrizAux);  
+			no->filhos[1] = no2;
+			
+			strcpy(matrizAux,trocarPos(no->matriz, 4, 1));
+			No* no3 = (No*)malloc(sizeof(No));
+			strcpy(no3->matriz, matrizAux);  
+			no->filhos[2] = no3;
+			
+			return 3;
+		}
+		case 2: {
 			//2 casos --> 1А: 1->2 || 2А: 5->2
+			strcpy(matrizAux,trocarPos(no->matriz, 1, 2));
+			No* no1 = (No*)malloc(sizeof(No));
+			strcpy(no1->matriz, matrizAux);  
+			no->filhos[0] = no1;
 			
-			break;
-		case 3: 
-			//3 casos --> 1А: 1->3 || 2А: 4->3 || 3А: 6->3
+			strcpy(matrizAux,trocarPos(no->matriz, 5, 2));
+			No* no2 = (No*)malloc(sizeof(No));
+			strcpy(no2->matriz, matrizAux);  
+			no->filhos[1] = no2;
+			return 2;
+		}
+		case 3: {
+			//3 casos --> 1А: 0->3 || 2А: 4->3 || 3А: 6->3
+			strcpy(matrizAux,trocarPos(no->matriz, 0, 3));
+			No* no1 = (No*)malloc(sizeof(No));
+			strcpy(no1->matriz, matrizAux);  
+			no->filhos[0] = no1;
 			
-			break;
-		case 4: 
-			//4 casos --> 1А: 2->4 || 2А: 3->4 || 3А: 5->4 || 4А: 7->4
+			strcpy(matrizAux,trocarPos(no->matriz, 4, 3));
+			No* no2 = (No*)malloc(sizeof(No));
+			strcpy(no2->matriz, matrizAux);  
+			no->filhos[1] = no2;
 			
-			break;
-		case 5: 
+			strcpy(matrizAux,trocarPos(no->matriz, 6, 3));
+			No* no3 = (No*)malloc(sizeof(No));
+			strcpy(no3->matriz, matrizAux);  
+			no->filhos[2] = no3;
+			
+			return 3;
+		}
+		case 4: {
+			//4 casos --> 1А: 1->4 || 2А: 3->4 || 3А: 5->4 || 4А: 7->4
+			strcpy(matrizAux,trocarPos(no->matriz, 1, 4));
+			No* no1 = (No*)malloc(sizeof(No));
+			strcpy(no1->matriz, matrizAux);  
+			no->filhos[0] = no1;
+			
+			strcpy(matrizAux,trocarPos(no->matriz, 3, 4));
+			No* no2 = (No*)malloc(sizeof(No));
+			strcpy(no2->matriz, matrizAux);  
+			no->filhos[1] = no2;
+			
+			strcpy(matrizAux,trocarPos(no->matriz, 5, 4));
+			No* no3 = (No*)malloc(sizeof(No));
+			strcpy(no3->matriz, matrizAux);  
+			no->filhos[2] = no3;
+			
+			strcpy(matrizAux,trocarPos(no->matriz, 7, 4));
+			No* no4 = (No*)malloc(sizeof(No));
+			strcpy(no4->matriz, matrizAux);  
+			no->filhos[3] = no4;
+			return 4;
+		}
+		case 5: {
 			//3 casos --> 1А: 2->5 || 2А: 4->5 || 3А: 8->5
+			strcpy(matrizAux,trocarPos(no->matriz, 2, 5));
+			No* no1 = (No*)malloc(sizeof(No));
+			strcpy(no1->matriz, matrizAux);  
+			no->filhos[0] = no1;
 			
-			break;
-		case 6: 
+			strcpy(matrizAux,trocarPos(no->matriz, 4, 5));
+			No* no2 = (No*)malloc(sizeof(No));
+			strcpy(no2->matriz, matrizAux);  
+			no->filhos[1] = no2;
+			
+			strcpy(matrizAux,trocarPos(no->matriz, 8, 5));
+			No* no3 = (No*)malloc(sizeof(No));
+			strcpy(no3->matriz, matrizAux);  
+			no->filhos[2] = no3;
+			return 3;
+		}
+		case 6: {
 			//2 casos --> 1А: 3->6 || 2А: 7->6
+			strcpy(matrizAux,trocarPos(no->matriz, 3, 6));
+			No* no1 = (No*)malloc(sizeof(No));
+			strcpy(no1->matriz, matrizAux);  
+			no->filhos[0] = no1;
 			
-			break;
-		case 7: 
-		
+			strcpy(matrizAux,trocarPos(no->matriz, 7, 6));
+			No* no2 = (No*)malloc(sizeof(No));
+			strcpy(no2->matriz, matrizAux);  
+			no->filhos[1] = no2;					
+			return 2;
+		}
+		case 7: {
 			//3 casos --> 1А: 4->7 || 2А: 6->7 || 3А: 8->7
+			strcpy(matrizAux,trocarPos(no->matriz, 4, 7));
+			No* no1 = (No*)malloc(sizeof(No));
+			strcpy(no1->matriz, matrizAux);  
+			no->filhos[0] = no1;
 			
-			break;
-		case 8: 
-		
+			strcpy(matrizAux,trocarPos(no->matriz, 6, 7));
+			No* no2 = (No*)malloc(sizeof(No));
+			strcpy(no2->matriz, matrizAux);  
+			no->filhos[1] = no2;
+			
+			strcpy(matrizAux,trocarPos(no->matriz, 8, 7));
+			No* no3 = (No*)malloc(sizeof(No));
+			strcpy(no3->matriz, matrizAux);  
+			no->filhos[2] = no3;
+			return 3;
+		}
+		case 8: {
 			//2 casos --> 1А: 7->8 || 2А: 5->8
+			strcpy(matrizAux,trocarPos(no->matriz, 7, 8));
+			No* no1 = (No*)malloc(sizeof(No));
+			strcpy(no1->matriz, matrizAux);  
+			no->filhos[0] = no1;
 			
-			break;
+			strcpy(matrizAux,trocarPos(no->matriz, 5, 8));
+			No* no2 = (No*)malloc(sizeof(No));
+			strcpy(no2->matriz, matrizAux);  
+			no->filhos[1] = no2;	
+			return 2;
+		}
 	}
 	
 }
-
-
 
 
 
@@ -268,6 +500,7 @@ int main(){
 	gotoxy(5,10);
 	printf("Resolver (Enter)");
 	getche();
+	AEstrela(novo, estado_final);
 	system("cls");
 	fflush(stdin);
 
