@@ -1,3 +1,4 @@
+
 #include<conio.h>
 #include<stdlib.h>
 #include<stdio.h>
@@ -6,7 +7,7 @@
 #include<string.h>
 #include<conio2.h>
 #include <time.h>
-//#include "fila.h"
+#include "fila.h"
 
 // === ESTRUTURAS === //
 
@@ -72,20 +73,34 @@ char* dequeue(Fila* fila){
 	return NULL;
 }
 
-
 bool possui(Fila* fila, char matriz[10]){
-	NoFila* noAux = fila->cabeca;
+	if(fila->cabeca==NULL)
+		return 0;
+	else
+	{
+		NoFila* noAux = fila->cabeca;
 	while(noAux -> prox != NULL)
 		if(strcmp(matriz, noAux->matriz) == 0)
 			return 1;
 		else
 			noAux = noAux ->prox;
+
 	if(strcmp(matriz, noAux->matriz) == 0)
 			return 1;
 		else
 			return 0;
+	}
+	
 }
-
+void exibirPassos(Fila *fila)
+{
+	NoFila* noAux = fila->cabeca;
+	while(noAux!=NULL)
+	{
+		printf("%s \n",noAux->matriz);
+		noAux = noAux->prox;
+	}
+}
 // === FUNÇÕES === //
 void Quadro(int CI, int LI, int CF, int LF, int CorT, int CorF);
 bool verificar(char estado_final[20]);
@@ -94,9 +109,10 @@ void printBoard(char matriz[20], int x, int y);
 void embaralhar(char novo[20]);
 int get_index(char* string, char c);
 int gerarFilhos(No* no);
-
-
-
+char * criarFilho(int pos_zero,int pos_mov,char atual[10]);
+void criarNo(TpElemento pai,TpFila &fila,char final[10],Fila lista,int tam);
+void buscaCega(char ini[10], char final[10]);
+char* possiveisMov(int pos);
 // === QUADRO === //
 void Quadro(int CI, int LI, int CF, int LF, int CorT, int CorF)
 {
@@ -438,20 +454,15 @@ int gerarFilhos(No* no){
 
 
 // === Busca Cega === //
- int acharZero(char atual[10])
-{
-       
-        int tam = strlen(atual);
-        int pos;
-        for (int i = 0; i < tam; i++)
-        {
-            if (atual[i] == 48){
-            	 return i;
-			}
-               
-        }
 
-        return -1;
+char * criarFilho(int pos_zero,int pos_mov,char atual[10])
+{
+	char novo[10],aux,filho[10];
+	aux = atual[pos_zero];
+	strcpy(filho,atual);
+	filho[pos_zero] = filho[pos_mov];
+	filho[pos_mov] = aux;
+	return filho;
 }
 
 char* possiveisMov(int pos)
@@ -459,21 +470,78 @@ char* possiveisMov(int pos)
 	char p[2]="";
 	switch(pos)
 	{
+		case 0 :strcpy(p,strcat(p,"13"));
+				break;
+		case 1: strcpy(p,strcat(p,"042"));
+				 break;
+		case 2: strcpy(p,strcat(p,"15"));
+				 break;
 		case 3 : strcpy(p,strcat(p,"046"));
-		//falta os outros cases
+				 break;
+		case 4: strcpy(p,strcat(p,"3157"));
+				 break;
+		case 5: strcpy(p,strcat(p,"842"));
+				 break;
+		case 6: strcpy(p,strcat(p,"37"));
+				 break;
+		case 7: strcpy(p,strcat(p,"648"));
+				 break;
+		case 8: strcpy(p,strcat(p,"75"));
+				 break;
 	}
 
 }
-void criarNo(char atual[10])
+void criarNo(TpElemento pai,TpFila &fila,char final[10],Fila lista,int tam)
 {
-	char aux[10];
-	int pos =acharZero(atual);
+	char filho[10];
+	TpElemento elem;
+	int pos = get_index(pai.Elemento,'0');
 	char movs[4];
 	strcpy(movs,possiveisMov(pos));
-	printf("%s\n",movs);
 
+	int qtd = strlen(movs);
+	for(int i=0;i<qtd;i++){
+		strcpy(filho,criarFilho(pos,movs[i]-'0',pai.Elemento));
+		if(!possui(&lista,filho)){
+			strcpy(elem.Elemento,filho);
+			elem.tam = tam;
+			inserir(fila,elem);
+			enqueue(&lista,filho);
+		}
+	}
+
+	
 }
-
+void buscaCega(char ini[10], char final[10])
+{
+	TpFila fila;
+	Fila* lista=(Fila*)malloc(sizeof(Fila));
+	lista->cabeca = NULL;
+	enqueue(lista,ini);
+	TpElemento no;
+     int tam =0; 
+	strcpy(no.Elemento,ini);
+	inicializar(fila);
+	criarNo(no,fila,final,*lista,++tam);
+	int dif,achou=0;
+	printf("--------------------------------\n");
+	while(achou==0 && !vazia(fila.inicio,fila.fim))
+	{
+		no = retirar(fila);
+	
+		dif = qtd_errado(no.Elemento,final);
+		
+		if(dif==0){
+			achou=1;
+			printf("achou o %s em um caminho de tamanho %d\n",no.Elemento,no.tam);
+		}
+		else
+		{
+			criarNo(no,fila,final,*lista,++tam);
+		}
+	}
+	exibirPassos(lista);
+}
 // === MAIN === //
 int main(){
 	int resp;
@@ -506,5 +574,4 @@ int main(){
 
 	return algoritmo;
 }
-
 
