@@ -180,7 +180,7 @@ No* pegarNoCerto(Fila* fila, Fila* filaOrdenada,int *nivel){
 	return NULL;
 }
 
-// === FUNÇÕES === //
+// === FUNÃ‡Ã•ES === //
 void Quadro(int CI, int LI, int CF, int LF, int CorT, int CorF);
 bool verificar(char estado_final[20]);
 int qtd_errado(char novo[10], char final[10]);
@@ -224,7 +224,7 @@ void Quadro(int CI, int LI, int CF, int LF, int CorT, int CorF)
 }
 
 
-// === VERIFICAÇÃO === //
+// === VERIFICAÃ‡ÃƒO === //
 bool verificar(char estado_final[20]){
 	int tamanho = 0, tamanho_mutiplicado = 1;
 	for(int i = 0; i<10; i++)
@@ -236,7 +236,7 @@ bool verificar(char estado_final[20]){
 }
 
 
-// === FUNÇÕES AUXILIARES === //
+// === FUNÃ‡Ã•ES AUXILIARES === //
 int qtd_errado(char novo[10], char final[10]){
 	int i, qtd_errado = 0;
 	for(i = 0; i<10; i++){
@@ -385,7 +385,7 @@ int gerarFilhos(No* no){
 	switch(posZero)
 	{
 		case 0: {
-			//2 casos --> 1°: 1->0 || 2°: 3->0
+			//2 casos --> 1Â°: 1->0 || 2Â°: 3->0
 			strcpy(matrizAux,trocarPos(no->matriz, 0, 1));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -398,7 +398,7 @@ int gerarFilhos(No* no){
 			return 2;
 			}
 		case 1: {
-			//3 casos --> 1°: 0->1 || 2°: 2->1 || 3°: 4->1
+			//3 casos --> 1Â°: 0->1 || 2Â°: 2->1 || 3Â°: 4->1
 			strcpy(matrizAux,trocarPos(no->matriz, 0, 1));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -417,7 +417,7 @@ int gerarFilhos(No* no){
 			return 3;
 		}
 		case 2: {
-			//2 casos --> 1°: 1->2 || 2°: 5->2
+			//2 casos --> 1Â°: 1->2 || 2Â°: 5->2
 			strcpy(matrizAux,trocarPos(no->matriz, 1, 2));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -430,7 +430,7 @@ int gerarFilhos(No* no){
 			return 2;
 		}
 		case 3: {
-			//3 casos --> 1°: 0->3 || 2°: 4->3 || 3°: 6->3
+			//3 casos --> 1Â°: 0->3 || 2Â°: 4->3 || 3Â°: 6->3
 			strcpy(matrizAux,trocarPos(no->matriz, 0, 3));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -449,7 +449,7 @@ int gerarFilhos(No* no){
 			return 3;
 		}
 		case 4: {
-			//4 casos --> 1°: 1->4 || 2°: 3->4 || 3°: 5->4 || 4°: 7->4
+			//4 casos --> 1Â°: 1->4 || 2Â°: 3->4 || 3Â°: 5->4 || 4Â°: 7->4
 			strcpy(matrizAux,trocarPos(no->matriz, 1, 4));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -472,7 +472,7 @@ int gerarFilhos(No* no){
 			return 4;
 		}
 		case 5: {
-			//3 casos --> 1°: 2->5 || 2°: 4->5 || 3°: 8->5
+			//3 casos --> 1Â°: 2->5 || 2Â°: 4->5 || 3Â°: 8->5
 			strcpy(matrizAux,trocarPos(no->matriz, 2, 5));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -490,7 +490,7 @@ int gerarFilhos(No* no){
 			return 3;
 		}
 		case 6: {
-			//2 casos --> 1°: 3->6 || 2°: 7->6
+			//2 casos --> 1Â°: 3->6 || 2Â°: 7->6
 			strcpy(matrizAux,trocarPos(no->matriz, 3, 6));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -503,7 +503,7 @@ int gerarFilhos(No* no){
 			return 2;
 		}
 		case 7: {
-			//3 casos --> 1°: 4->7 || 2°: 6->7 || 3°: 8->7
+			//3 casos --> 1Â°: 4->7 || 2Â°: 6->7 || 3Â°: 8->7
 			strcpy(matrizAux,trocarPos(no->matriz, 4, 7));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -521,7 +521,7 @@ int gerarFilhos(No* no){
 			return 3;
 		}
 		case 8: {
-			//2 casos --> 1°: 7->8 || 2°: 5->8
+			//2 casos --> 1Â°: 7->8 || 2Â°: 5->8
 			strcpy(matrizAux,trocarPos(no->matriz, 7, 8));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
