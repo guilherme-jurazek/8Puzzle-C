@@ -1,8 +1,10 @@
-#define MAXFILA 100000
+#define MAXFILA 10000
+
 struct TpElemento
 {
 	char Elemento[10];
-	int tam;
+	char *historico[30];
+	int tam,hist_tam;
 };
 
 struct TpFila
@@ -15,6 +17,7 @@ void inicializar(TpFila &f)
 	f.fim = -1;
 	f.inicio=0;
 	f.cont = 0;
+
 }
 int vazia(int inicio,int fim)
 {
@@ -45,4 +48,13 @@ void Exibir(TpFila F)
 		printf("%s\n",aux.Elemento);
 	}
 		
+}
+
+void mostra_historico(TpElemento F)
+{
+	int i = 0, x = 10, y = 5;
+	for(int i=0;i<=F.hist_tam;i++)
+		{
+			printf("%s\n",F.historico[i]);
+		}
 }
