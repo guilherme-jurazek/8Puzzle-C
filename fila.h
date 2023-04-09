@@ -1,4 +1,4 @@
-#define MAXFILA 10000
+#define MAXFILA 14000
 
 struct TpElemento
 {
@@ -50,11 +50,4 @@ void Exibir(TpFila F)
 		
 }
 
-void mostra_historico(TpElemento F)
-{
-	int i = 0, x = 10, y = 5;
-	for(int i=0;i<=F.hist_tam;i++)
-		{
-			printf("%s\n",F.historico[i]);
-		}
-}
+
