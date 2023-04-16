@@ -8,6 +8,10 @@
 #include <time.h>
 #include "fila.h"
 #include <sys\timeb.h> 
+//Alunos: Mateus Bonassa Ederli - Guilherme Jurazek Guedes - Gustavo da Rosa Ferruci
+
+
+
 
 // === ESTRUTURAS === //
 
@@ -16,15 +20,9 @@ struct No
 	int fscore, gscore, hscore, qtdFilho;
 	char matriz[10];
 	struct No* filhos[4];
+	struct No* noPai;
 };
 typedef struct No No;
-
-
-
-	
-
-// === FILA === //
-
 
 struct Fila
 {
@@ -35,10 +33,31 @@ typedef struct Fila Fila;
 
 struct NoFila
 {
-	No* no;
+	No* no, *noPai;
 	struct NoFila *prox;
 };
 typedef struct NoFila NoFila;
+
+
+
+// === FUNÃ‡Ã•ES === //
+void Quadro(int CI, int LI, int CF, int LF, int CorT, int CorF);
+bool verificar(char estado_final[20]);
+int qtd_errado(char novo[10], char final[10]);
+void printBoard(char matriz[20], int x, int y);
+void embaralhar(char novo[20]);
+int get_index(char* string, char c);
+int gerarFilhos(No* no);
+char * criarFilho(int pos_zero,int pos_mov,char atual[10]);
+void criarNo(TpElemento pai,TpFila &fila,char final[10],Fila lista,int &qtd_no_total);
+void buscaCega(char ini[10], char final[10]);
+char* possiveisMov(int pos);
+void mostrar_historico(TpElemento F);
+	
+
+// === FILA === //
+
+
 
 void enqueue(Fila* fila, No* no){
 	NoFila* nofila = (NoFila*)malloc(sizeof(NoFila));	
@@ -104,28 +123,68 @@ void exibirPassos(Fila *fila)
 	}
 }
 
-void enqueueOrdenado(Fila* fila, No* no){
+int tamanhoFila(Fila* fila){
+    int tam = 0;
+    NoFila* noAux = fila->cabeca;
+    while(noAux != NULL){
+        tam++;
+        noAux = noAux->prox;
+    }
+    return tam;
+}
+
+void removerFilhos(Fila* filaOrdenada, No* no) {
+    NoFila* noAux = filaOrdenada->cabeca;
+    NoFila* noAnterior = NULL;
+    while (noAux != NULL) {
+        int remove = 0;
+        for (int i = 0; i < no->qtdFilho; i++) {
+            if (noAux->no == no->filhos[i]) {
+                remove = 1;
+                break;
+            }
+        }
+        if (remove) {
+            if (noAnterior != NULL) {
+                noAnterior->prox = noAux->prox;
+                noAux = noAnterior->prox;
+            } else {
+                filaOrdenada->cabeca = noAux->prox;
+                noAux = filaOrdenada->cabeca;
+            }
+        } else {
+            noAnterior = noAux;
+            noAux = noAux->prox;
+        }
+    }
+}
+
+
+void enqueueOrdenado(Fila* fila, No* no, No* noPai){
 	NoFila* nofila = (NoFila*)malloc(sizeof(NoFila));	
 	nofila -> prox = NULL;
 	nofila -> no = no;
-	
+	no -> noPai = noPai;
 	if(fila->cabeca == NULL){
 		fila->cabeca = nofila;
 	}
 	else{
 		NoFila* noAux = fila -> cabeca;
 		NoFila* noAnt = noAux;
-		while(noAux -> prox != NULL && noAux->no->fscore < no->fscore){
+		while(noAux -> prox != NULL && noAux->no->hscore < no->hscore){
 			noAnt = noAux;
 			noAux = noAux ->prox;
 		}	
 		if(noAnt == noAux){
-			if(noAux->no->fscore > no->fscore){
+			if(noAux->no->fscore > no->hscore){
 				fila->cabeca = nofila;
 				nofila -> prox = noAux;
 			}
-			else
+			else{
+				nofila -> prox = noAux ->prox;
 				noAux -> prox = nofila;
+			}
+				
 		}else{
 			if(noAux -> prox != NULL){
 				noAnt -> prox = nofila;
@@ -136,63 +195,103 @@ void enqueueOrdenado(Fila* fila, No* no){
 	}
 }
 
+void removeNo(Fila* fila, No* no) {
+    NoFila* noAtual = fila->cabeca;
+    NoFila* noAnterior = NULL;
+
+    while (noAtual != NULL && noAtual->no != no) {
+        noAnterior = noAtual;
+        noAtual = noAtual->prox;
+    }
+
+    if (noAtual == NULL) {
+        printf("NÃ³ nÃ£o encontrado na fila.\n");
+        return;
+    }
+
+    if (noAnterior == NULL) {
+        fila->cabeca = noAtual->prox;
+    } else {
+        noAnterior->prox = noAtual->prox;
+    }
+}
+
+
 
 NoFila* getLast(Fila* fila){
-	NoFila* noAux = fila -> cabeca;
-	NoFila* noAnterior = noAux;
-	if(noAux != NULL){
-		while(noAux -> prox != NULL){
-			noAnterior = noAux;
-			noAux = noAux ->prox;
-		}
-		if(noAnterior != noAux)
-			noAnterior -> prox = NULL;
-		else
-			fila -> cabeca = NULL;
-		return noAux;
-	}
-	return NULL;
+	NoFila* noAux = fila->cabeca;
+    NoFila* noAnterior = NULL;
+    if(noAux != NULL){
+        while(noAux->prox != NULL){
+            noAnterior = noAux;
+            noAux = noAux->prox;
+        }
+        if(noAnterior != NULL){
+            noAnterior->prox = NULL;
+        } else {
+            fila->cabeca = NULL;
+        }
+    }
+    
+	return noAux;
 }
 
-No* pegarNoCerto(Fila* fila, Fila* filaOrdenada,int *nivel){
-	int achou = 0, qtdFilho, i, posMelhor;
-	NoFila* noFila = getLast(fila);
+No* pegarNoCerto(Fila* fila, Fila* filaOrdenada){
+	int achou = 0, qtdFilho, i, posMelhor, nivel, aux_heuristico, pos;
 	No* noMelhor = dequeue(filaOrdenada);
-	while(achou == 0){
-		if(strcmp(noFila->no->matriz, noMelhor->matriz) == 0){
-			noMelhor = dequeue(filaOrdenada);
-		}
-		for(i = 0; i<noFila->no-> qtdFilho; i++){
-			if(strcmp(noFila->no->filhos[i]->matriz, noMelhor->matriz) == 0){
-				achou = 1;
-				posMelhor = i;
+	
+	if(possui(fila, noMelhor->noPai->matriz)){
+		NoFila* noFila = getLast(fila);
+		//printf("\nFILA ORDENADA: %s, %d\n", noMelhor -> matriz, noMelhor -> fscore);
+		while(achou == 0){
+			//printf("\nFILA: %s %d\n", noFila->no->matriz, noFila->no->fscore);
+			for(i = 0; i<noFila->no-> qtdFilho; i++){
+				//printf("\nFILA NÃƒO ORDENADA: %s %d\n", noFila->no->filhos[i]->matriz,noFila->no->filhos[i]->fscore);
+				if(noFila->no->filhos[i] != NULL && strcmp(noFila->no->filhos[i]->matriz, noMelhor->matriz) == 0){
+					achou = 1;
+					posMelhor = i;
+				}
+			}
+			if(achou != 1){
+				removerFilhos(filaOrdenada, noFila->no);
+				noFila = getLast(fila);
 			}
 		}
-		if(achou != 1){
-			noFila = getLast(fila);
-			*nivel= *nivel - 1;
-		}
+		enqueue(fila, noFila->no);
+		enqueue(fila, noFila->no->filhos[posMelhor]);
+		if(noFila->no->filhos[posMelhor] != NULL)
+			return noFila->no->filhos[posMelhor];
 	}
-	enqueue(fila, noFila->no);
-	enqueue(fila, noFila->no->filhos[posMelhor]);
-	if(noFila->no->filhos[posMelhor] != NULL)
-		return noFila->no->filhos[posMelhor];
-	return NULL;
+	else{
+		No* no = dequeue(fila);
+		enqueue(fila, no);
+		while(strcmp(no->matriz, noMelhor->matriz) != 0){
+			nivel =  tamanhoFila(fila);
+			aux_heuristico = -1;
+			qtdFilho = gerarFilhos(no);
+			no->qtdFilho = qtdFilho;
+			for(i = 0 ; i< qtdFilho; i++){
+				no->filhos[i]->hscore = qtd_errado(no->filhos[i]->matriz, noMelhor->matriz);
+				no->filhos[i]->gscore = nivel;
+				no->filhos[i]->fscore = no->filhos[i]->hscore + no->filhos[i]->gscore;
+				if(!possui(fila, no->filhos[i]->matriz)){
+					if(aux_heuristico == -1 || aux_heuristico > no->filhos[i]->fscore)
+					{
+						aux_heuristico =  no->filhos[i]->fscore;
+						pos = i;
+					}
+				}
+			}
+			no = no->filhos[i];
+			enqueue(fila, no);
+		}
+		return no;
+	}
 }
 
-// === FUNÇÕES === //
-void Quadro(int CI, int LI, int CF, int LF, int CorT, int CorF);
-bool verificar(char estado_final[20]);
-int qtd_errado(char novo[10], char final[10]);
-void printBoard(char matriz[20], int x, int y);
-void embaralhar(char novo[20]);
-int get_index(char* string, char c);
-int gerarFilhos(No* no);
-char * criarFilho(int pos_zero,int pos_mov,char atual[10]);
-void criarNo(TpElemento pai,TpFila &fila,char final[10],Fila lista,int &qtd_no_total);
-void buscaCega(char ini[10], char final[10]);
-char* possiveisMov(int pos);
-void mostrar_historico(TpElemento F);
+
+
+
 // === QUADRO === //
 void Quadro(int CI, int LI, int CF, int LF, int CorT, int CorF)
 {
@@ -224,7 +323,7 @@ void Quadro(int CI, int LI, int CF, int LF, int CorT, int CorF)
 }
 
 
-// === VERIFICAÇÃO === //
+// === VERIFICAÃ‡ÃƒO === //
 bool verificar(char estado_final[20]){
 	int tamanho = 0, tamanho_mutiplicado = 1;
 	for(int i = 0; i<10; i++)
@@ -236,7 +335,7 @@ bool verificar(char estado_final[20]){
 }
 
 
-// === FUNÇÕES AUXILIARES === //
+// === FUNÃ‡Ã•ES AUXILIARES === //
 int qtd_errado(char novo[10], char final[10]){
 	int i, qtd_errado = 0;
 	for(i = 0; i<10; i++){
@@ -317,6 +416,7 @@ void embaralhar(char novo[20]){
 		no = no->filhos[rand() % (qtd_filho)];
 	}
 	strcpy(novo, no->matriz);
+	
 }
 
 
@@ -336,39 +436,40 @@ void AEstrela(char novo[10],char final[10]){
 	filaTodosNos->cabeca = NULL;
 	strcpy(no->matriz, novo);
 	enqueue(fila, no);
-	enqueue(filaTodosNos, no);
-	int i, qtd_no_total = 1, aux_heuristico, qtd_filho, pos_heuristico, nivel = 1, passou;
+	int i, qtd_no_total = 1, aux_heuristico, qtd_filho, pos_heuristico, nivel = 0, passou;
 	while(strcmp(no->matriz, final) != 0){
+		nivel =  tamanhoFila(fila);
 		aux_heuristico = -1;
 		qtd_filho = gerarFilhos(no);
 		no->qtdFilho = qtd_filho;
 		passou = 0;
 		for(i = 0 ; i< qtd_filho; i++){
-			
+			no->filhos[i]->hscore = qtd_errado(no->filhos[i]->matriz, final);
+			no->filhos[i]->gscore = nivel;
+			no->filhos[i]->fscore = no->filhos[i]->hscore + no->filhos[i]->gscore;
 			//printf("%d -> %s \n",nivel, no->filhos[i]->matriz);
 			if(!possui(fila, no->filhos[i]->matriz)){
 				//printf("%s ",no->filhos[i]->matriz);
 				passou = 1;
-				no->filhos[i]->hscore = qtd_errado(no->filhos[i]->matriz, final);
-				no->filhos[i]->gscore = nivel;
-				no->filhos[i]->fscore = no->filhos[i]->hscore + no->filhos[i]->gscore;
-				enqueueOrdenado(filaTodosNos, no->filhos[i]);
-				//printf("  %d   \n", no->filhos[i]->hscore);
-				if(aux_heuristico == -1 || aux_heuristico >= no->filhos[i]->fscore){
+				enqueueOrdenado(filaTodosNos, no->filhos[i], no);
+				//printf("  %d   \n", no->filhos[i]->hscore);	
+				if(aux_heuristico == -1 || aux_heuristico > no->filhos[i]->fscore){
 					aux_heuristico = no->filhos[i]->fscore;
 					pos_heuristico = i;
 				}
+				
 			}
 		}
 //		printf("\n");
 		if(passou == 1){
 			nivel++;
 			no = no->filhos[pos_heuristico];
+			removeNo(filaTodosNos, no);
 			enqueue(fila, no);
 			qtd_no_total++;
 		}
 		else{
-			no = pegarNoCerto(fila, filaTodosNos, &nivel);
+			no = pegarNoCerto(fila, filaTodosNos);
 			qtd_no_total++;
 		}
 	}
@@ -377,9 +478,10 @@ void AEstrela(char novo[10],char final[10]){
 	ftime(&end);
     diff = (int) (1000.0 * (end.time - start.time) + (end.millitm - start.millitm));
 	system("cls");
-	printf("Tempo de execucao: %u milisengundos\n",diff);
-	printf("NOS visitados: %d\n", qtd_no_total);
-	printf("Passos para solucao: %d", nivel);
+	int sol = tamanhoFila(fila) -1, nv = tamanhoFila(filaTodosNos) + sol;
+	printf("Tempo de execucao: %u milissegundos\n",diff);
+	printf("NOS visitados: %d\n", nv);
+	printf("Passos para solucao: %d", sol);
 	mostrar_resultado(fila);
 	getche();
 }
@@ -390,7 +492,7 @@ int gerarFilhos(No* no){
 	switch(posZero)
 	{
 		case 0: {
-			//2 casos --> 1°: 1->0 || 2°: 3->0
+			//2 casos --> 1Â°: 1->0 || 2Â°: 3->0
 			strcpy(matrizAux,trocarPos(no->matriz, 0, 1));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -403,7 +505,7 @@ int gerarFilhos(No* no){
 			return 2;
 			}
 		case 1: {
-			//3 casos --> 1°: 0->1 || 2°: 2->1 || 3°: 4->1
+			//3 casos --> 1Â°: 0->1 || 2Â°: 2->1 || 3Â°: 4->1
 			strcpy(matrizAux,trocarPos(no->matriz, 0, 1));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -422,7 +524,7 @@ int gerarFilhos(No* no){
 			return 3;
 		}
 		case 2: {
-			//2 casos --> 1°: 1->2 || 2°: 5->2
+			//2 casos --> 1Â°: 1->2 || 2Â°: 5->2
 			strcpy(matrizAux,trocarPos(no->matriz, 1, 2));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -435,7 +537,7 @@ int gerarFilhos(No* no){
 			return 2;
 		}
 		case 3: {
-			//3 casos --> 1°: 0->3 || 2°: 4->3 || 3°: 6->3
+			//3 casos --> 1Â°: 0->3 || 2Â°: 4->3 || 3Â°: 6->3
 			strcpy(matrizAux,trocarPos(no->matriz, 0, 3));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -454,7 +556,7 @@ int gerarFilhos(No* no){
 			return 3;
 		}
 		case 4: {
-			//4 casos --> 1°: 1->4 || 2°: 3->4 || 3°: 5->4 || 4°: 7->4
+			//4 casos --> 1Â°: 1->4 || 2Â°: 3->4 || 3Â°: 5->4 || 4Â°: 7->4
 			strcpy(matrizAux,trocarPos(no->matriz, 1, 4));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -477,7 +579,7 @@ int gerarFilhos(No* no){
 			return 4;
 		}
 		case 5: {
-			//3 casos --> 1°: 2->5 || 2°: 4->5 || 3°: 8->5
+			//3 casos --> 1Â°: 2->5 || 2Â°: 4->5 || 3Â°: 8->5
 			strcpy(matrizAux,trocarPos(no->matriz, 2, 5));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -495,7 +597,7 @@ int gerarFilhos(No* no){
 			return 3;
 		}
 		case 6: {
-			//2 casos --> 1°: 3->6 || 2°: 7->6
+			//2 casos --> 1Â°: 3->6 || 2Â°: 7->6
 			strcpy(matrizAux,trocarPos(no->matriz, 3, 6));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -508,7 +610,7 @@ int gerarFilhos(No* no){
 			return 2;
 		}
 		case 7: {
-			//3 casos --> 1°: 4->7 || 2°: 6->7 || 3°: 8->7
+			//3 casos --> 1Â°: 4->7 || 2Â°: 6->7 || 3Â°: 8->7
 			strcpy(matrizAux,trocarPos(no->matriz, 4, 7));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -526,7 +628,7 @@ int gerarFilhos(No* no){
 			return 3;
 		}
 		case 8: {
-			//2 casos --> 1°: 7->8 || 2°: 5->8
+			//2 casos --> 1Â°: 7->8 || 2Â°: 5->8
 			strcpy(matrizAux,trocarPos(no->matriz, 7, 8));
 			No* no1 = (No*)malloc(sizeof(No));
 			strcpy(no1->matriz, matrizAux);  
@@ -635,9 +737,7 @@ void buscaCega(char ini[10], char final[10])
 {
 	struct timeb start, end;
     int diff;
-	//double time_spent = 0.0;
 	ftime(&start);
-    //clock_t begin = clock();
 	TpFila fila;
 	Fila* lista=(Fila*)malloc(sizeof(Fila));
 	lista->cabeca = NULL;
@@ -663,13 +763,10 @@ void buscaCega(char ini[10], char final[10])
 		else
 			criarNo(no,fila,final,*lista,qtd_no_total);
 	}
-	//clock_t end = clock();
-    //time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
 	system("cls");
-	//printf("Tempo de execucao: %f segundos\n", time_spent);
 	ftime(&end);
     diff = (int) (1000.0 * (end.time - start.time) + (end.millitm - start.millitm));
-	printf("Tempo de execucao: %u milisengundos\n",diff);
+	printf("Tempo de execucao: %u milissegundos\n",diff);
 	printf("NOS visitados: %d\n", qtd_no_total);
 	printf("Passos para solucao: %d\n", no.hist_tam);
 	printf("--------------------------------------------------------\n");
